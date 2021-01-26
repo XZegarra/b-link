@@ -5,7 +5,6 @@
 #include <utility>
 #include<iostream>
 #include <queue>
-//const int B = 3;
 
 using namespace std;
 
