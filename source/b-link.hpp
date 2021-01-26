@@ -18,11 +18,16 @@ class BLinkTree {
 	class Node {
 	public:
 		bool isLeaf;						//IF IS LEAF, IT HAS TO BE CONNECTED WITH THE OTHER LEAFTS
-		int* key, size = 0;
+		Type* key;
+		int size = 0;
 		Node** ptr;
 		Node() {
 			key = new int[B];
 			ptr = new Node * [B + 1];
+
+			for (int i = 0; i < B + 1; i++) {
+				ptr[i] = NULL;
+			}
 		};
 
 		void printValue() {
@@ -72,61 +77,65 @@ class BLinkTree {
 		while (!(current->isLeaf)) {
 			current = current->ptr[0];
 		}
-		if (current->key[0] > root->key[0]) {
+		cout << "LEAF AL FONDO: " << current->key[0] << endl;
+		cout << "ROOT: " << root->key[0] << endl;
+
+		if (current->key[0] < root->key[0]) {
 			Type temporal = (current->key[0]);
 			(root->key[0]) = current->key[0];
 			current->key[0] = temporal;
+
 		}
 	}
-	void insertInternal(int x, Node* current, Node* child) {
-		if (current->size < B) {
-			int i = 0;
-			while (x > current->key[i] && i < current->size) {
-				i++;
+	void insertInternal(int value, Node* current, Node* child) {
+		if (current->size < B) {	//IF THERE IS NOT OVERFLOW. WE WILL DO THE SAME PROCCESS OF UP ABOVE
+			int leftIndex = 0;
+			while (value > current->key[leftIndex] && leftIndex < current->size) {
+				leftIndex++;
 			}
 
-			for (int j = current->size; j > i; j--) {
-				current->key[j] = current->key[j - 1];
+			for (int rightIndex = current->size; rightIndex > leftIndex; rightIndex--) {
+				current->key[rightIndex] = current->key[rightIndex - 1];
 			}
 
-			for (int j = current->size + 1; j > i + 1; j--) {
-				current->ptr[j] = current->ptr[j - 1];
+			for (int rightIndex = current->size + 1; rightIndex > leftIndex + 1; rightIndex--) {
+				current->ptr[rightIndex] = current->ptr[rightIndex - 1];
 			}
 
-			current->key[i] = x;
+			current->key[leftIndex] = value;
 			current->size++;
-			current->ptr[i + 1] = child;
+			current->ptr[leftIndex + 1] = child;
 		}
-		else {
+		else {	//IF THERE IS GONNA BE OVERFLOW
 			Node* newInternal = new Node;
-			int virtualKey[B + 1];
-			Node* virtualPtr[B + 2];
+			Type temporalKey[B + 1];
+			Node* temporalPtr[B + 2];
 
 			for (int i = 0; i < B; i++) {
-				virtualKey[i] = current->key[i];
+				temporalKey[i] = current->key[i];
 			}
 
 			for (int i = 0; i < B + 1; i++) {
-				virtualPtr[i] = current->ptr[i];
+				temporalPtr[i] = current->ptr[i];
 			}
 
 			int i = 0, j;
 
-			while (x > virtualKey[i] && i < B) {
+			while (value > temporalKey[i] && i < B) {
 				i++;
 			}
 
 			for (int j = B + 1; j > i; j--) {
-				virtualKey[j] = virtualKey[j - 1];
+				temporalKey[j] = temporalKey[j - 1];
 			}
 
-			virtualKey[i] = x;
+			temporalKey[i] = value;
 
 			for (int j = B + 2; j > i + 1; j--) {
-				virtualPtr[j] = virtualPtr[j - 1];
+				temporalPtr[j] = temporalPtr[j - 1];
 			}
 
-			virtualPtr[i + 1] = child;
+			temporalPtr[i + 1] = child;
 			newInternal->isLeaf = false;
 
 			current->size = (B + 1) / 2;
@@ -134,11 +143,11 @@ class BLinkTree {
 			newInternal->size = B - ((B + 1) / 2);
 
 			for (int i = 0, j = current->size + 1; i < newInternal->size; i++, j++) {
-				newInternal->key[i] = virtualKey[j];
+				newInternal->key[i] = temporalKey[j];
 			}
 
 			for (int i = 0, j = current->size + 1; i < newInternal->size + 1; i++, j++) {
-				newInternal->ptr[i] = virtualPtr[j];
+				newInternal->ptr[i] = temporalPtr[j];
 			}
 
 			if (current == root) {
@@ -165,7 +174,7 @@ class BLinkTree {
 	  root = NULL;
   }
 
-  void destroy(Node* node) {
+  void destroy(Node* node) {							//DESTROYING NODES
 	  if (node) {
 		  for (int i = 0; i < node->size; i++) {
 			  destroy(node->ptr[i]);
@@ -322,7 +331,7 @@ class BLinkTree {
 			  }
 		  }
 	  }
-	  //fitRoot();
+	  fitRoot();
   }
 
   void remove(const data_type& value) {}

@@ -56,7 +56,6 @@ void run_test() {
     threads[i].join();
   }
 
-  b_link.amplitud();
 }
 
 void run_test2() {
@@ -102,6 +101,6 @@ void run_test2() {
 }
 
 int main() {
-  run_test2();
+  run_test();
   return 0;
 }
