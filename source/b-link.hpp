@@ -5,6 +5,9 @@
 #include <utility>
 #include<iostream>
 #include <queue>
+#include <vector>
+#include <thread>
+#include <mutex>
 
 using namespace std;
 
@@ -20,6 +23,7 @@ class BLinkTree {
 		Type* key;
 		int size = 0;
 		Node** ptr;
+		mutex m;
 		Node() {
 			key = new int[B];
 			ptr = new Node * [B + 1];
@@ -75,9 +79,10 @@ class BLinkTree {
 
 		while (!(current->isLeaf)) {
 			current = current->ptr[0];
+			//cout << "hola";
 		}
-		cout << "LEAF AL FONDO: " << current->key[0] << endl;
-		cout << "ROOT: " << root->key[0] << endl;
+		//cout << "LEAF AL FONDO: " << current->key[0] << endl;
+		//cout << "ROOT: " << root->key[0] << endl;
 
 		if (current->key[0] < root->key[0]) {
 			Type temporal = (current->key[0]);
@@ -205,22 +210,27 @@ class BLinkTree {
 	  }
 	  else {
 		  Node* current = root;
-		  
+		  current->m.lock();
 		  while (current->isLeaf == false) {				//WHILE CURRENT IS NOT A LEAF WE WILL KEEP MOVING DOWN, WE WILL FIND THE NODE WHERE THE VALUE WE WANT TO FIND IS
 			  for (int i = 0; i < current->size; i++) {		//WE WILL MOVE THROW THE PTRs WETHER THE VALUE WE WANT TO FIND IS LESS OR MORE THAN THE CURRENT NODE
 				  for (int o = 0; o < current->size; o++) {				//ONCE WE ARE ON THE NODE WHERE OUR VALUE IS SUPPOSED TO BE. WE WILL LOOK FOR IT INSIDE THE KEYS OF THE NODE
 					  if (current->key[o] == value) {
+						  current->m.unlock();
 						  return true;
 					  }
 				  }
 
 				  if (value < current->key[i]) {
+					  current->m.unlock();
 					  current = current->ptr[i];
+					  current->m.lock();
 					  break;
 				  }
 
 				  if (i == current->size - 1) {
+					  current->m.unlock();
 					  current = current->ptr[i + 1];
+					  current->m.lock();
 					  break;
 				  }
 			  }
@@ -228,14 +238,38 @@ class BLinkTree {
 
 		  for (int i = 0; i < current->size; i++) {				//ONCE WE ARE ON THE NODE WHERE OUR VALUE IS SUPPOSED TO BE. WE WILL LOOK FOR IT INSIDE THE KEYS OF THE NODE
 			  if (current->key[i] == value) {
+				  current->m.unlock();
 				  return true;
 			  }
 		  }
+		  current->m.unlock();
+
 	  }
 	  return false;												//IF WE DON'T FIND THE VALUE IN THAT NODE WE WILL RETURN FALSE BECAUSE THE VALUE IS NOT THERE
   }
 
+  void linkTree() {
+	  vector<vector<Node*>> table;
+	  int numOfLevels = countLevels;
+
+	  for (int i = 0; i < B + 1;i++) {
+		  Node* current = getRoot();
+
+		  for (int j = 0; j < numOfLevels; j++) {
+
+		  }
+	  }
+  }
   
+  int countLevels() {
+	  Node* current = getRoot();
+	  int numOfLevels = -1;
+	  while (current) {
+		  numOfLevels++;
+		  current = current->ptr[0];
+	  }
+	  return numOfLevels;
+  }
 
   void insert(const data_type& value) {
 	  if (root == NULL) {				//WE CHECK IF THE VALUE THAT WE WANT TO INSERT IS THE FIRST ONE THAT THE TREE IS RECEIVING
