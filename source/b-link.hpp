@@ -23,7 +23,9 @@ class BLinkTree {
 		Type* key;
 		int size = 0;
 		Node** ptr;
+		Node* blinkNode = NULL;
 		mutex m;
+		int level = 0;
 		Node() {
 			key = new int[B];
 			ptr = new Node * [B + 1];
@@ -248,16 +250,17 @@ class BLinkTree {
 	  return false;												//IF WE DON'T FIND THE VALUE IN THAT NODE WE WILL RETURN FALSE BECAUSE THE VALUE IS NOT THERE
   }
 
-  void linkTree() {
-	  vector<vector<Node*>> table;
-	  int numOfLevels = countLevels;
+  void setLevels(Node* currentNode, int currentLevel = 0) {
+	  if (currentNode == NULL) {
+		  return;
+	  }
 
 	  for (int i = 0; i < B + 1;i++) {
-		  Node* current = getRoot();
-
-		  for (int j = 0; j < numOfLevels; j++) {
-
+		  if (currentNode->ptr[i] == NULL) {
+			  continue;
 		  }
+		  currentNode->level = currentLevel;
+		  setLevels(currentNode->ptr[i], currentLevel + 1);
 	  }
   }
   
@@ -271,22 +274,49 @@ class BLinkTree {
 	  return numOfLevels;
   }
 
+  void linkTree(Node* node, vector<Node*>* levels, int currentLevel = 0) {
+	  if (node == NULL) {
+		  return;
+	  }
+
+	  for (int i = 0; i < B + 1;i++) {
+		  if (node->ptr[i] == NULL) {
+			  continue;
+		  }
+		  
+		  levels[node->level].push_back(node);
+
+		  node->level = currentLevel;
+		  linkTree(node->ptr[i], levels);
+	  }
+  }
+
+  void linkNodes(vector<Node*>* levels) {
+	  int numberOfLevels = countLevels();
+
+	  for (int i = 0; i < numberOfLevels; i++) {
+		  for (int j = 0; j < levels[i].size();j++) {
+			  levels[i][j] = levels[i][j+1];
+		  }
+	  }
+  }
+
   void insert(const data_type& value) {
 	  if (root == NULL) {				//WE CHECK IF THE VALUE THAT WE WANT TO INSERT IS THE FIRST ONE THAT THE TREE IS RECEIVING
 		  root = new Node;
 		  root->key[0] = value,
-		  root->isLeaf = true;
+			  root->isLeaf = true;
 		  root->size = 1;
 	  }
 	  else {
 		  Node* current = root;		//CURRENT WILL BE ROOT
-		  Node* parent;				
-		  
+		  Node* parent;
+
 		  while (current->isLeaf == false) {		//WE WILL GO ALL THE WAY DOWN UNTIL FIND A LEAF
 			  parent = current;						//PARENT WILL BE CURRENT IF CURRENT IT'S NOT A LEAF
 			  for (int i = 0; i < current->size; i++) { //WE CHECK THE CURRENT NODE
 				  if (value < current->key[i]) {		//IF WE WANT TO INSERT A NODE LESS THAN THE CURRENT KEY WE WILL GO TO THE LEFT NODE
-					  current = current->ptr[i];		
+					  current = current->ptr[i];
 					  break;
 				  }
 				  if (i == current->size - 1) {			//IF WE ARRIVE TO THE FINAL PTR WE WILL GO TO THE RIGHTEST PTR OF THE CURRENT NODE
@@ -336,7 +366,7 @@ class BLinkTree {
 			  newLeaf->size = B + 1 - ((B + 1) / 2);
 
 			  current->ptr[current->size] = newLeaf;			//WE FIX THE PTRs
-																				
+
 			  newLeaf->ptr[newLeaf->size] = current->ptr[B];
 
 			  current->ptr[B] = NULL;
@@ -344,7 +374,7 @@ class BLinkTree {
 			  for (leftIndex = 0; leftIndex < current->size; leftIndex++) { //WE COPPY OUR KEYS FROM OUR TEMPORAL NODE TO CURRENT FROM LEFT TO RIGHT
 				  current->key[leftIndex] = temporalNode[leftIndex];
 			  }
-			  
+
 			  for (leftIndex = 0, rightIndex = current->size; leftIndex < newLeaf->size; leftIndex++, rightIndex++) { //WE COPPY OUR KEYS FROM OUR TEMPORAL NODE TO NEWLEAF FROM RIGHT TO LEFT
 				  newLeaf->key[leftIndex] = temporalNode[rightIndex];
 			  }
@@ -365,6 +395,21 @@ class BLinkTree {
 		  }
 	  }
 	  fitRoot();
+
+	  //GET B-LINK TREE
+	  const int numberOfLevels = countLevels();
+	  Node* temporalRoot = getRoot();
+
+	  setLevels(temporalRoot, numberOfLevels);
+
+	  vector<Node*>* levels = new vector<Node*>[numberOfLevels];
+
+	  temporalRoot = getRoot();
+
+
+	  linkTree(temporalRoot, levels);
+	  linkNodes(levels);
+	
   }
 
   void remove(const data_type& value) {}
